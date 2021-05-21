@@ -532,7 +532,9 @@ $(call gb_LinkTarget_use_static_libraries,$(1),\
 	hyphen \
 )
 else
-$(call gb_LinkTarget_add_libs,$(1),$(HYPHEN_LIB))
+$(call gb_LinkTarget_add_libs,$(1),\
+	$(call gb_UnpackedTarball_get_dir,hyphen)/.libs/libhyphen$(gb_StaticLibrary_PLAINEXT) \
+)
 $(call gb_LinkTarget_use_external_project,$(1),hyphen)
 endif
 
@@ -816,11 +818,10 @@ $(call gb_LinkTarget_use_static_libraries,$(1),\
 )
 else
 $(call gb_LinkTarget_add_libs,$(1),\
-	$(call gb_UnpackedTarball_get_dir,libexttextcat)/src/.libs/libexttextcat-2.0.a\
+	$(call gb_UnpackedTarball_get_dir,libexttextcat)/src/.libs/libexttextcat-2.0$(gb_StaticLibrary_PLAINEXT) \
 )
 $(call gb_LinkTarget_use_external_project,$(1),libexttextcat)
 endif
-
 
 endef
 
@@ -3877,7 +3878,7 @@ endif # SYSTEM_JFREEREPORT
 
 define gb_Executable__register_bestreversemap
 $(call gb_Executable_add_runtime_dependencies,bestreversemap,\
-	$(if $(filter $(OS),ANDROID),,$(if $(filter TRUE,$(DISABLE_DYNLOADING)),,$(call gb_Library_get_target_for_build,sal_textenc))) \
+    $(if $(filter ANDROID iOS,$(OS)),,$(call gb_Library_get_target_for_build,sal_textenc)) \
 )
 endef
 
@@ -3894,7 +3895,7 @@ endef
 
 define gb_Executable__register_cppumaker
 $(call gb_Executable_add_runtime_dependencies,cppumaker,\
-	$(if $(filter $(OS),ANDROID),,$(if $(filter TRUE,$(DISABLE_DYNLOADING)),,$(call gb_Library_get_target,sal_textenc))) \
+	$(if $(filter ANDROID iOS,$(OS)),,$(call gb_Library_get_target,sal_textenc)) \
 )
 endef
 
