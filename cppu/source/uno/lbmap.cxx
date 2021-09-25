@@ -329,10 +329,8 @@ static void setNegativeBridge( const OUString & rBridgeName )
 
 static uno_ext_getMappingFunc selectMapFunc( const OUString & rBridgeName )
 {
-#ifndef EMSCRIPTEN
     if (rBridgeName.equalsAscii( CPPU_CURRENT_LANGUAGE_BINDING_NAME "_uno" ))
         return CPPU_ENV_uno_ext_getMapping;
-#endif
 #if HAVE_FEATURE_JAVA
     if (rBridgeName.equalsAscii( "java" "_uno" ))
         return java_uno_ext_getMapping;
@@ -424,6 +422,7 @@ static Mapping loadExternalMapping(
             OSL_ASSERT( aExt.is() );
             if (aExt.is())
                 return aExt;
+            SAL_INFO("cppu", "Could not load external mapping for " << aName);
         }
 #else
         // find proper lib
