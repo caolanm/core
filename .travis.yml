@@ -4,17 +4,10 @@ os: linux
 
 sudo: false
 
-jobs:
-  include:
-   - name: gcc - linux - ppc64le
-     compiler: gcc
-     arch: ppc64le
-   - name: gcc - linux - aarch64
-     compiler: gcc
-     arch: arm64
-   - name: gcc - linux - s390x
-     compiler: gcc
-     arch: s390x
+arch:
+  - arm64
+  - ppc64le
+  - s390x
 
 script:
   - ./autogen.sh && make
