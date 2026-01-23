@@ -32,6 +32,7 @@ namespace com::sun::star {
 
 class ScDPObject;
 class ScDataPilotDescriptorBase;
+class ScTokenArray;
 
 namespace oox::xls {
 
@@ -171,6 +172,13 @@ private:
     rtl::Reference< ScDataPilotFieldObj >
                         convertRowColPageField( sal_Int32 nAxis );
 
+    /** Resolves calculated field info from cache.
+        Returns field name and whether this is a calculated field. */
+    std::pair<OUString, bool> resolveCalculatedField( sal_Int32 nDatabaseIdx );
+
+    /** Compiles the calculated field formula (if any) and returns the token array. */
+    std::shared_ptr<ScTokenArray> compileCalculatedFieldFormula();
+
 private:
     typedef ::std::vector< PTFieldItemModel > ItemModelVector;
 
@@ -179,6 +187,7 @@ private:
     PTFieldModel        maModel;            /// Pivot field settings.
     OUString            maDPFieldName;      /// Name of the field in DataPilot field collection.
     sal_Int32           mnFieldIndex;       /// Zero-based index of this field.
+    std::optional<OUString> maDPFieldFormula;/// Formula of the field in DataPilot field collection.
 };
 
 struct PTFilterModel
@@ -353,6 +362,10 @@ public:
     sc::PivotTableStyleInfo& getStyleInfo() { return maStyleInfo; }
 private:
     typedef RefVector< PivotTableField >        PivotTableFieldVector;
+public:
+    /** Returns pivot table fields. */
+    const PivotTableFieldVector& getFields() { return maFields; }
+private:
     typedef RefVector< PivotTableFilter >       PivotTableFilterVector;
     typedef ::std::vector< sal_Int32 >          IndexVector;
     typedef ::std::vector< PTPageFieldModel >   PageFieldVector;
@@ -383,7 +396,6 @@ private:
     rtl::Reference< ScDataPilotDescriptorBase > // css::sheet::XDataPilotDescriptor
                           mxDPDescriptor;     /// Descriptor of the DataPilot object.
     sc::PivotTableStyleInfo maStyleInfo;
-
 };
 
 class PivotTableBuffer : public WorkbookHelper

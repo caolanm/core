@@ -130,6 +130,7 @@ public:
 
     ScItemValue* GetItem(SCCOL nColumn);
     bool IsDataElement(SCCOL nColumn);
+    bool IsCalculatedElement(SCCOL nColumn);
 
     ScDPLabelData& GetLabelData(SCCOL nColumn);
     ScDPLabelDataVector& GetLabelDataVector() { return maPivotParameters.maLabelArray;}
