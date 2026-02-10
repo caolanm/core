@@ -4396,10 +4396,13 @@ $(eval $(call gb_UnoApi_add_idlfiles,offapi,org/libreoffice/embindtest, \
     Constants \
     Enum \
     Exception \
+    ExplicitConstructors \
+    ImplicitConstructor \
     Struct \
     StructLong \
     StructString \
     Template \
+    XArgumentStore \
     XAttributes \
     XTest \
 ))
