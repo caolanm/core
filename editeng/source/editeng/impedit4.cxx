@@ -29,6 +29,7 @@
 #include "impedit.hxx"
 #include <editeng/editview.hxx>
 #include "eehtml.hxx"
+#include "eemd.hxx"
 #include "editobj2.hxx"
 #include <i18nlangtag/lang.h>
 #include <sal/log.hxx>
@@ -56,6 +57,9 @@
 #include <editeng/charreliefitem.hxx>
 #include <editeng/frmdiritem.hxx>
 #include <editeng/emphasismarkitem.hxx>
+#include <editeng/numitem.hxx>
+#include <editeng/eeitem.hxx>
+#include <svl/intitem.hxx>
 #include "textconv.hxx"
 #include <rtl/tencinfo.h>
 #include <svtools/htmlout.hxx>
@@ -109,6 +113,8 @@ EditPaM ImpEditEngine::Read(SvStream& rInput, const OUString& rBaseURL, EETextFo
         aPaM = ReadXML( rInput, rSel );
     else if ( eFormat == EETextFormat::Html )
         aPaM = ReadHTML( rInput, rBaseURL, rSel, pHTTPHeaderAttrs );
+    else if ( eFormat == EETextFormat::Markdown )
+        aPaM = ReadMarkdown( rInput, rSel );
     else
     {
         OSL_FAIL( "Read: Unknown Format" );
@@ -190,6 +196,21 @@ EditPaM ImpEditEngine::ReadHTML( SvStream& rInput, const OUString& rBaseURL, Edi
     return xPrsr->GetCurSelection().Max();
 }
 
+EditPaM ImpEditEngine::ReadMarkdown(SvStream& rInput, EditSelection aSel)
+{
+    if (aSel.HasRange())
+        aSel = ImpDeleteSelection(aSel);
+
+    // Read stream content
+    sal_uInt64 nSize = rInput.TellEnd() - rInput.Tell();
+    std::vector<char> aBuf(nSize);
+    rInput.ReadBytes(aBuf.data(), nSize);
+    OString aContent(aBuf.data(), nSize);
+
+    EditMDParser aParser(mpEditEngine, aSel.Max());
+    return aParser.Parse(aContent);
+}
+
 void ImpEditEngine::Write( SvStream& rOutput, EETextFormat eFormat )
 {
     EditPaM aStartPaM(maEditDoc.GetStartPaM());
@@ -213,6 +234,8 @@ void ImpEditEngine::Write(SvStream& rOutput, EETextFormat eFormat, const EditSel
         WriteXML( rOutput, rSel );
     else if ( eFormat == EETextFormat::Html )
         ;
+    else if ( eFormat == EETextFormat::Markdown )
+        WriteMarkdown( rOutput, rSel );
     else
     {
         OSL_FAIL( "Write: Unknown Format" );
@@ -1083,6 +1106,398 @@ void ImpEditEngine::WriteItemAsRTF( const SfxPoolItem& rItem, SvStream& rOutput,
         }
         break;
     }
+}
+
+static OString lcl_EscapeMarkdownChar(sal_Unicode c)
+{
+    switch (c)
+    {
+        case '\\': return "\\\\"_ostr;
+        case '*': return "\\*"_ostr;
+        case '_': return "\\_"_ostr;
+        case '~': return "\\~"_ostr;
+        case '[': return "\\["_ostr;
+        case ']': return "\\]"_ostr;
+        case '(': return "\\("_ostr;
+        case ')': return "\\)"_ostr;
+        case '`': return "\\`"_ostr;
+        case '#': return "\\#"_ostr;
+        case '>': return "\\>"_ostr;
+        case '+': return "\\+"_ostr;
+        case '-': return "\\-"_ostr;
+        case '|': return "\\|"_ostr;
+        default: return OString();
+    }
+}
+
+static OString lcl_EscapeMarkdown(std::u16string_view rText)
+{
+    OStringBuffer aBuf;
+    OString aUtf8 = OUStringToOString(rText, RTL_TEXTENCODING_UTF8);
+    for (sal_Int32 i = 0; i < aUtf8.getLength(); ++i)
+    {
+        char c = aUtf8[i];
+        // Only escape at start of line for these context-sensitive chars
+        if (c == '#' || c == '>' || c == '+' || c == '-')
+        {
+            if (i == 0 || aUtf8[i - 1] == '\n')
+            {
+                OString aEscaped = lcl_EscapeMarkdownChar(static_cast<sal_Unicode>(c));
+                aBuf.append(aEscaped);
+                continue;
+            }
+        }
+        else
+        {
+            OString aEscaped = lcl_EscapeMarkdownChar(static_cast<sal_Unicode>(c));
+            if (!aEscaped.isEmpty())
+            {
+                aBuf.append(aEscaped);
+                continue;
+            }
+        }
+        aBuf.append(c);
+    }
+    return aBuf.makeStringAndClear();
+}
+
+ErrCode ImpEditEngine::WriteMarkdown(SvStream& rOutput, EditSelection aSel)
+{
+    assert(IsUpdateLayout() && "WriteMarkdown for UpdateMode = false!");
+    CheckIdleFormatter();
+
+    sal_Int32 nStartNode, nEndNode;
+    aSel.Adjust(maEditDoc);
+
+    nStartNode = maEditDoc.GetPos(aSel.Min().GetNode());
+    nEndNode = maEditDoc.GetPos(aSel.Max().GetNode());
+
+    bool bPrevWasListItem = false;
+
+    for (sal_Int32 nNode = nStartNode; nNode <= nEndNode; nNode++)
+    {
+        ContentNode* pNode = maEditDoc.GetObject(nNode);
+        assert(pNode && "WriteMarkdown: Node not found");
+
+        const ParaPortion* pParaPortion = FindParaPortion(pNode);
+        if (!pParaPortion)
+            continue;
+
+        bool bIsListItem = false;
+        OString aListPrefix;
+
+        // Check for list/bullet paragraph attributes
+        const SfxInt16Item& rLevelItem = GetParaAttrib(nNode, EE_PARA_OUTLLEVEL);
+        sal_Int16 nOutlLevel = rLevelItem.GetValue();
+        if (nOutlLevel >= 0 && nOutlLevel <= 9)
+        {
+            bIsListItem = true;
+            OStringBuffer aIndent;
+            for (sal_Int16 i = 0; i < nOutlLevel; i++)
+                aIndent.append("  ");
+
+            const SvxNumBulletItem& rNumBullet = GetParaAttrib(nNode, EE_PARA_NUMBULLET);
+            const SvxNumRule& rRule = rNumBullet.GetNumRule();
+            const SvxNumberFormat* pFmt = rRule.Get(nOutlLevel);
+
+            bool bOrdered = false;
+            if (pFmt)
+            {
+                SvxNumType eType = pFmt->GetNumberingType();
+                if (eType == SVX_NUM_ARABIC
+                    || eType == SVX_NUM_ROMAN_UPPER
+                    || eType == SVX_NUM_ROMAN_LOWER
+                    || eType == SVX_NUM_CHARS_UPPER_LETTER
+                    || eType == SVX_NUM_CHARS_LOWER_LETTER)
+                {
+                    bOrdered = true;
+                }
+            }
+
+            if (bOrdered)
+                aListPrefix = aIndent.makeStringAndClear() + "1. ";
+            else
+                aListPrefix = aIndent.makeStringAndClear() + "- ";
+        }
+
+        // Paragraph separator
+        if (nNode > nStartNode)
+        {
+            if (bIsListItem || bPrevWasListItem)
+                rOutput.WriteOString("\n");
+            else
+                rOutput.WriteOString("\n\n");
+        }
+
+        if (bIsListItem)
+            rOutput.WriteOString(aListPrefix);
+
+        bPrevWasListItem = bIsListItem;
+
+        // Determine selection range within this paragraph
+        sal_Int32 nStartPos = 0;
+        sal_Int32 nEndPos = pNode->Len();
+        if (nNode == nStartNode)
+            nStartPos = aSel.Min().GetIndex();
+        if (nNode == nEndNode)
+            nEndPos = aSel.Max().GetIndex();
+
+        // Iterate text portions
+        sal_Int32 nIndex = 0;
+        sal_Int32 nPortionCount = pParaPortion->GetTextPortions().Count();
+
+        for (sal_Int32 nPortion = 0; nPortion < nPortionCount; nPortion++)
+        {
+            const TextPortion& rTextPortion = pParaPortion->GetTextPortions()[nPortion];
+            sal_Int32 nPortionStart = nIndex;
+            sal_Int32 nPortionEnd = nIndex + rTextPortion.GetLen();
+            nIndex = nPortionEnd;
+
+            // Skip portions outside selection
+            if (nPortionEnd <= nStartPos)
+                continue;
+            if (nPortionStart >= nEndPos)
+                break;
+
+            // Clamp to selection
+            sal_Int32 nEffStart = std::max(nPortionStart, nStartPos);
+            sal_Int32 nEffEnd = std::min(nPortionEnd, nEndPos);
+
+            // Check for URL field
+            const SvxURLField* pURLField = nullptr;
+            if (rTextPortion.GetKind() == PortionKind::FIELD)
+            {
+                const EditCharAttrib* pAttr
+                    = pNode->GetCharAttribs().FindFeature(nPortionStart);
+                if (pAttr)
+                {
+                    const SvxFieldItem* pFieldItem
+                        = dynamic_cast<const SvxFieldItem*>(pAttr->GetItem());
+                    if (pFieldItem)
+                    {
+                        const SvxFieldData* pFieldData = pFieldItem->GetField();
+                        pURLField = dynamic_cast<const SvxURLField*>(pFieldData);
+                    }
+                }
+            }
+
+            // Get text for this portion
+            OUString aText = EditDoc::GetParaAsString(pNode, nEffStart, nEffEnd);
+
+            // Check character attributes at portion start
+            bool bBold = false;
+            bool bItalic = false;
+            bool bStrikethrough = false;
+
+            // Get attribs at the effective start position
+            SfxItemSet aAttribs = GetAttribs(nNode, nEffStart, nEffEnd,
+                                             GetAttribsFlags::CHARATTRIBS);
+
+            const SvxWeightItem& rWeight = aAttribs.Get(EE_CHAR_WEIGHT);
+            if (rWeight.GetWeight() == WEIGHT_BOLD)
+                bBold = true;
+
+            const SvxPostureItem& rPosture = aAttribs.Get(EE_CHAR_ITALIC);
+            if (rPosture.GetPosture() == ITALIC_NORMAL
+                || rPosture.GetPosture() == ITALIC_OBLIQUE)
+                bItalic = true;
+
+            const SvxCrossedOutItem& rStrikeout = aAttribs.Get(EE_CHAR_STRIKEOUT);
+            if (rStrikeout.GetStrikeout() != STRIKEOUT_NONE)
+                bStrikethrough = true;
+
+            // Build markdown text
+            OStringBuffer aPortionBuf;
+            if (bStrikethrough)
+                aPortionBuf.append("~~");
+            if (bBold)
+                aPortionBuf.append("**");
+            if (bItalic)
+                aPortionBuf.append("*");
+
+            if (pURLField)
+            {
+                // Use the field's representation text, not the raw doc text
+                OString aRepr = OUStringToOString(
+                    pURLField->GetRepresentation(), RTL_TEXTENCODING_UTF8);
+                aPortionBuf.append("[" + aRepr + "]("
+                    + OUStringToOString(pURLField->GetURL(), RTL_TEXTENCODING_UTF8)
+                    + ")");
+            }
+            else
+            {
+                aPortionBuf.append(lcl_EscapeMarkdown(aText));
+            }
+
+            if (bItalic)
+                aPortionBuf.append("*");
+            if (bBold)
+                aPortionBuf.append("**");
+            if (bStrikethrough)
+                aPortionBuf.append("~~");
+
+            rOutput.WriteOString(aPortionBuf);
+        }
+    }
+
+    return rOutput.GetError();
+}
+
+OString ImpEditEngine::GetSimpleMarkdown() const
+{
+    assert(IsUpdateLayout() && "GetSimpleMarkdown for UpdateMode = false!");
+    const_cast<ImpEditEngine*>(this)->CheckIdleFormatter();
+
+    OStringBuffer aOutput;
+
+    sal_Int32 nStartNode = 0;
+    sal_Int32 nEndNode = maEditDoc.Count() - 1;
+
+    bool bPrevWasListItem = false;
+
+    for (sal_Int32 nNode = nStartNode; nNode <= nEndNode; nNode++)
+    {
+        const ContentNode* pNode = maEditDoc.GetObject(nNode);
+        const ParaPortion* pParaPortion = FindParaPortion(pNode);
+        if (!pParaPortion)
+            continue;
+
+        bool bIsListItem = false;
+        OString aListPrefix;
+
+        const SfxInt16Item& rLevelItem
+            = GetParaAttrib(nNode, EE_PARA_OUTLLEVEL);
+        sal_Int16 nOutlLevel = rLevelItem.GetValue();
+        if (nOutlLevel >= 0 && nOutlLevel <= 9)
+        {
+            bIsListItem = true;
+            OStringBuffer aIndent;
+            for (sal_Int16 i = 0; i < nOutlLevel; i++)
+                aIndent.append("  ");
+
+            const SvxNumBulletItem& rNumBullet
+                = GetParaAttrib(nNode, EE_PARA_NUMBULLET);
+            const SvxNumRule& rRule = rNumBullet.GetNumRule();
+            const SvxNumberFormat* pFmt = rRule.Get(nOutlLevel);
+
+            bool bOrdered = false;
+            if (pFmt)
+            {
+                SvxNumType eType = pFmt->GetNumberingType();
+                if (eType == SVX_NUM_ARABIC
+                    || eType == SVX_NUM_ROMAN_UPPER
+                    || eType == SVX_NUM_ROMAN_LOWER
+                    || eType == SVX_NUM_CHARS_UPPER_LETTER
+                    || eType == SVX_NUM_CHARS_LOWER_LETTER)
+                {
+                    bOrdered = true;
+                }
+            }
+
+            if (bOrdered)
+                aListPrefix = aIndent.makeStringAndClear() + "1. ";
+            else
+                aListPrefix = aIndent.makeStringAndClear() + "- ";
+        }
+
+        if (nNode > nStartNode)
+        {
+            if (bIsListItem || bPrevWasListItem)
+                aOutput.append("\n");
+            else
+                aOutput.append("\n\n");
+        }
+
+        if (bIsListItem)
+            aOutput.append(aListPrefix);
+
+        bPrevWasListItem = bIsListItem;
+
+        sal_Int32 nIndex = 0;
+        sal_Int32 nEndPortion = pParaPortion->GetTextPortions().Count() - 1;
+
+        for (sal_Int32 n = 0; n <= nEndPortion; n++)
+        {
+            const TextPortion& rTextPortion = pParaPortion->GetTextPortions()[n];
+
+            const SvxURLField* pURLField = nullptr;
+            if (rTextPortion.GetKind() == PortionKind::FIELD)
+            {
+                const EditCharAttrib* pAttr
+                    = pNode->GetCharAttribs().FindFeature(nIndex);
+                if (pAttr)
+                {
+                    const SvxFieldItem* pFieldItem
+                        = dynamic_cast<const SvxFieldItem*>(pAttr->GetItem());
+                    if (pFieldItem)
+                    {
+                        const SvxFieldData* pFieldData = pFieldItem->GetField();
+                        pURLField = dynamic_cast<const SvxURLField*>(pFieldData);
+                    }
+                }
+            }
+
+            OUString aText
+                = EditDoc::GetParaAsString(pNode, nIndex, nIndex + rTextPortion.GetLen());
+
+            // Check character attributes
+            bool bBold = false;
+            bool bItalic = false;
+            bool bStrikethrough = false;
+
+            SfxItemSet aAttribs = GetAttribs(
+                nNode, nIndex, nIndex + rTextPortion.GetLen(),
+                GetAttribsFlags::CHARATTRIBS);
+
+            const SvxWeightItem& rWeight = aAttribs.Get(EE_CHAR_WEIGHT);
+            if (rWeight.GetWeight() == WEIGHT_BOLD)
+                bBold = true;
+
+            const SvxPostureItem& rPosture = aAttribs.Get(EE_CHAR_ITALIC);
+            if (rPosture.GetPosture() == ITALIC_NORMAL
+                || rPosture.GetPosture() == ITALIC_OBLIQUE)
+                bItalic = true;
+
+            const SvxCrossedOutItem& rStrikeout = aAttribs.Get(EE_CHAR_STRIKEOUT);
+            if (rStrikeout.GetStrikeout() != STRIKEOUT_NONE)
+                bStrikethrough = true;
+
+            if (bStrikethrough)
+                aOutput.append("~~");
+            if (bBold)
+                aOutput.append("**");
+            if (bItalic)
+                aOutput.append("*");
+
+            if (pURLField)
+            {
+                // Use the field's representation text, not the raw doc text
+                OString aRepr = OUStringToOString(
+                    pURLField->GetRepresentation(), RTL_TEXTENCODING_UTF8);
+                aOutput.append("[" + aRepr + "]("
+                    + OUStringToOString(pURLField->GetURL(), RTL_TEXTENCODING_UTF8)
+                    + ")");
+            }
+            else
+            {
+                aOutput.append(lcl_EscapeMarkdown(aText));
+            }
+
+            if (bItalic)
+                aOutput.append("*");
+            if (bBold)
+                aOutput.append("**");
+            if (bStrikethrough)
+                aOutput.append("~~");
+
+            nIndex = nIndex + rTextPortion.GetLen();
+        }
+
+        if (aOutput.isEmpty() && nEndNode == 0)
+            break;
+    }
+
+    return aOutput.makeStringAndClear();
 }
 
 // Currently not good enough to be used for a ::Write of EETextFormat::Html, it

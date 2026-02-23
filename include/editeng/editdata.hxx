@@ -31,7 +31,7 @@ template<typename T> class SvParser;
 class SvxFieldItem;
 enum class HtmlTokenId : sal_Int16;
 
-enum class EETextFormat { Text = 0x20, Rtf, Html = 0x32, Xml };
+enum class EETextFormat { Text = 0x20, Rtf, Html = 0x32, Xml, Markdown };
 enum class EEHorizontalTextDirection { Default, L2R, R2L };
 enum class EESelectionMode  { Std, Hidden };
     // EESelectionMode::Hidden can be used to completely hide the selection. This is useful e.g. when you want show the selection

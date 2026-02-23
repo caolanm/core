@@ -729,6 +729,11 @@ OString EditView::GetSimpleHtml() const
     return getImpl().getEditEngine().mpImpEditEngine->GetSimpleHtml();
 }
 
+OString EditView::GetSimpleMarkdown() const
+{
+    return mpImpEditView->mpEditEngine->mpImpEditEngine->GetSimpleMarkdown();
+}
+
 void EditView::Cut()
 {
     Reference<css::datatransfer::clipboard::XClipboard> aClipBoard(GetClipboard());

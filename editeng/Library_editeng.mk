@@ -62,6 +62,7 @@ $(eval $(call gb_Library_add_exception_objects,editeng,\
     editeng/source/editeng/editview \
     editeng/source/editeng/edtspell \
     editeng/source/editeng/eehtml \
+    editeng/source/editeng/eemd \
     editeng/source/editeng/eeobj \
     editeng/source/editeng/eerdll \
     editeng/source/editeng/eertfpar \
@@ -171,6 +172,7 @@ $(eval $(call gb_Library_use_externals,editeng,\
 	icu_headers \
 	libxml2 \
 	yrs \
+	md4c \
 ))
 
 # vim: set noet sw=4 ts=4:

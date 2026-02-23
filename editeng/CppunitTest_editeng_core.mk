@@ -56,6 +56,7 @@ $(eval $(call gb_CppunitTest_use_externals,editeng_core,\
     icuuc \
 	libxml2 \
 	yrs \
+	md4c \
 ))
 
 $(eval $(call gb_CppunitTest_set_include,editeng_core,\
