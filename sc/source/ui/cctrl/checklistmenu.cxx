@@ -841,9 +841,8 @@ namespace
      * not. `bIncludeMarkedMembers` just does that.
      */
     void loadSearchedMembers(std::vector<int>& rSearchedMembers, std::vector<ScCheckListMember>& rMembers,
-                             const OUString& rSearchText, bool bIncludeMarkedMembers=false)
+                             const std::u16string_view& rSearchTextLC, bool bIncludeMarkedMembers=false)
     {
-        const OUString aSearchText = ScGlobal::getCharClass().lowercase( rSearchText );
 
         for (size_t i = 0; i < rMembers.size(); ++i)
         {
@@ -853,7 +852,7 @@ namespace
             if ( aLabelDisp.isEmpty() )
                 aLabelDisp = ScResId( STR_EMPTYDATA );
 
-            bool bPartialMatch = ScGlobal::getCharClass().lowercase( aLabelDisp ).indexOf( aSearchText ) != -1;
+            bool bPartialMatch = ScGlobal::getCharClass().lowercase( aLabelDisp ).indexOf( rSearchTextLC ) != -1;
 
             if (!bPartialMatch)
                 continue;
@@ -927,6 +926,7 @@ IMPL_LINK_NOARG(ScCheckListMenuControl, LockCheckedHdl, weld::Toggleable&, void)
         mpChecks->thaw();
 
         OUString aSearchText = mxEdSearch->get_text();
+        aSearchText = ScGlobal::getCharClass().lowercase(aSearchText);
         if (aSearchText.isEmpty())
         {
             /*
