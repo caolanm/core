@@ -876,10 +876,8 @@ namespace
     }
 }
 
-IMPL_LINK_NOARG(ScCheckListMenuControl, LockCheckedHdl, weld::Toggleable&, void)
+void ScCheckListMenuControl::MarkCheckedMembers()
 {
-    bool bLockCheckedEntries = mxChkLockChecked->get_active();
-
     if (mbHasDates)
     {
         // TODO: flesh it out later
@@ -910,7 +908,20 @@ IMPL_LINK_NOARG(ScCheckListMenuControl, LockCheckedHdl, weld::Toggleable&, void)
 
             return false;
         });
+    }
+}
 
+IMPL_LINK_NOARG(ScCheckListMenuControl, LockCheckedHdl, weld::Toggleable&, void)
+{
+    bool bLockCheckedEntries = mxChkLockChecked->get_active();
+    MarkCheckedMembers();
+
+    if (mbHasDates)
+    {
+        // TODO: flesh this out
+    }
+    else
+    {
         mpChecks->freeze();
         mpChecks->clear();
         mpChecks->thaw();
