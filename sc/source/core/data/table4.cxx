@@ -2476,6 +2476,12 @@ void ScTable::FillSeries( SCCOL nCol1, SCROW nRow1, SCCOL nCol2, SCROW nRow2,
                                             if ( !SubTotal::SafeMult( nAdd, static_cast<double>(++nIndex) ) ||
                                                     !SubTotal::SafePlus( nVal, nAdd ) )
                                                 bError = true;
+                                            else
+                                                // Round to remove floating-point noise
+                                                // that accumulates from nStartVal + nStepValue * nIndex.
+                                                // rtl::math::approxValue rounds the 16th significant digit;
+                                                // safe for zero, large values and infinities.
+                                                nVal = rtl::math::approxValue(nVal);
                                         }
                                     }
                                     break;
@@ -2589,6 +2595,10 @@ void ScTable::FillSeries( SCCOL nCol1, SCROW nRow1, SCCOL nCol2, SCROW nRow2,
                                                 if ( !SubTotal::SafeMult( nAdd, static_cast<double>(++nIndex) ) ||
                                                         !SubTotal::SafePlus( nVal, nAdd ) )
                                                     bError = true;
+                                                else
+                                                    // Round to remove floating-point noise
+                                                    // (see the symmetric block above).
+                                                    nVal = rtl::math::approxValue(nVal);
                                             }
                                         }
                                         break;
