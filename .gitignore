@@ -165,6 +165,7 @@ LibreOffice.VC.VC.opendb
 /.gdbinit
 /.gdb_history
 gdbtrace.log
+gdb.txt
 
 # Codelite IDE specific
 *.project
