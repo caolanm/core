@@ -2326,7 +2326,7 @@ void DrawingML::WriteShapeTransformation( const Reference< XShape >& rXShape, sa
 
         if (nullptr != pShape)
         {
-            std::shared_ptr< svx::diagram::DiagramHelper_svx > pDiagramHelper(pShape->getDiagramHelperFromDiagramOrMember());
+            std::shared_ptr< svx::diagram::DiagramHelper_svx > pDiagramHelper(pShape->getDiagramHelper());
 
             if (pDiagramHelper)
             {
