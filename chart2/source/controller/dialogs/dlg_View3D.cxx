@@ -24,6 +24,7 @@
 #include "tp_3D_SceneIllumination.hxx"
 #include <ChartModel.hxx>
 #include <Diagram.hxx>
+#include <comphelper/lok.hxx>
 
 #include <vcl/tabs.hrc>
 
@@ -48,10 +49,15 @@ View3DDialog::View3DDialog(weld::Window* pParent, const rtl::Reference<::chart::
     m_xTabControl->append_page(u"appearance"_ustr, TabResId(RID_TAB_CHART_APPEARANCE.aLabel), &aStr);
     m_xAppearance.reset(new ThreeD_SceneAppearance_TabPage(m_xTabControl->get_page(u"appearance"_ustr), xChartModel, m_aControllerLocker));
 
-    aStr = RID_L + RID_TAB_CHART_ILLUMINATION.sIconName;
-    m_xTabControl->append_page(u"illumination"_ustr, TabResId(RID_TAB_CHART_ILLUMINATION.aLabel), &aStr);
-    m_xIllumination.reset(new ThreeD_SceneIllumination_TabPage(m_xTabControl->get_page(u"illumination"_ustr), m_xDialog.get(),
-        xSceneProperties, xChartModel));
+    // TODO: implement Svx3DLightControl as a JSDialog widget so that the
+    // Illumination tab can work in LOKit.
+    if (!comphelper::LibreOfficeKit::isActive())
+    {
+        aStr = RID_L + RID_TAB_CHART_ILLUMINATION.sIconName;
+        m_xTabControl->append_page(u"illumination"_ustr, TabResId(RID_TAB_CHART_ILLUMINATION.aLabel), &aStr);
+        m_xIllumination.reset(new ThreeD_SceneIllumination_TabPage(m_xTabControl->get_page(u"illumination"_ustr), m_xDialog.get(),
+            xSceneProperties, xChartModel));
+    }
 
     m_xTabControl->connect_enter_page(LINK(this, View3DDialog, ActivatePageHdl));
 

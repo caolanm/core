@@ -320,6 +320,7 @@ constexpr auto SdrawDialogList
 constexpr auto SchartDialogList
     = frozen::make_unordered_set<std::u16string_view>({
         // schart
+        { u"modules/schart/ui/3dviewdialog.ui" },
         { u"modules/schart/ui/attributedialog.ui" },
         { u"modules/schart/ui/charttypedialog.ui" },
         { u"modules/schart/ui/datarangedialog.ui" },
@@ -328,6 +329,8 @@ constexpr auto SchartDialogList
         { u"modules/schart/ui/inserttitledlg.ui" },
         { u"modules/schart/ui/smoothlinesdlg.ui" },
         { u"modules/schart/ui/steppedlinesdlg.ui" },
+        { u"modules/schart/ui/tp_3D_SceneAppearance.ui" },
+        { u"modules/schart/ui/tp_3D_SceneGeometry.ui" },
         { u"modules/schart/ui/tp_ChartColorPalette.ui" },
         { u"modules/schart/ui/tp_ChartGradients.ui" },
         { u"modules/schart/ui/tp_ChartType.ui" },
