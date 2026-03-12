@@ -799,22 +799,19 @@ void ChartController::executeDlg_ObjectProperties_withUndoGuard(
 
 void ChartController::executeDispatch_View3D()
 {
-    try
-    {
-        UndoLiveUpdateGuard aUndoGuard(
-            SchResId( STR_ACTION_EDIT_3D_VIEW ),
-            m_xUndoManager );
+    auto xUndoGuard = std::make_shared<UndoLiveUpdateGuard>(
+        SchResId( STR_ACTION_EDIT_3D_VIEW ),
+        m_xUndoManager );
 
-        //open dialog
-        SolarMutexGuard aSolarGuard;
-        View3DDialog aDlg(GetChartFrame(), getChartModel());
-        if (aDlg.run() == RET_OK)
-            aUndoGuard.commit();
-    }
-    catch(const uno::RuntimeException&)
-    {
-        TOOLS_WARN_EXCEPTION("chart2", "" );
-    }
+    SolarMutexGuard aSolarGuard;
+    auto xDlg = std::make_shared<View3DDialog>(GetChartFrame(), getChartModel());
+    weld::DialogController::runAsync(xDlg, [xDlg, xUndoGuard=std::move(xUndoGuard)](int nResult) {
+        if (nResult == RET_OK)
+        {
+            xDlg->commitPendingChanges();
+            xUndoGuard->commit();
+        }
+    });
 }
 
 } //namespace chart

@@ -69,12 +69,10 @@ View3DDialog::~View3DDialog()
     m_nLastPageId = m_xTabControl->get_current_page();
 }
 
-short View3DDialog::run()
+void View3DDialog::commitPendingChanges()
 {
-    short nResult = GenericDialogController::run();
-    if (nResult == RET_OK && m_xGeometry)
+    if (m_xGeometry)
         m_xGeometry->commitPendingChanges();
-    return nResult;
 }
 
 } //namespace chart
