@@ -880,6 +880,13 @@ void SfxLokHelper::notifyContextChange(const css::ui::ContextChangeEventObject& 
 
     SfxViewShell* pViewShell = SfxViewShell::Get({ rEvent.Source, css::uno::UNO_QUERY });
     if (!pViewShell)
+    {
+        // Source may be an embedded controller (e.g. ChartController) that
+        // is not an SfxViewShell itself. Fall back to the current view shell
+        // so that context changes from embedded editors reach LOKit clients.
+        pViewShell = SfxViewShell::Current();
+    }
+    if (!pViewShell)
         return;
 
     OUString aBuffer =

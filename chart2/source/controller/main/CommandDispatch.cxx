@@ -21,6 +21,9 @@
 
 #include <CommandDispatch.hxx>
 #include <com/sun/star/util/URLTransformer.hpp>
+#include <comphelper/lok.hxx>
+#include <LibreOfficeKit/LibreOfficeKitEnums.h>
+#include <sfx2/viewsh.hxx>
 
 using namespace ::com::sun::star;
 
@@ -133,6 +136,19 @@ void CommandDispatch::fireStatusEventForURL(
         {
             std::unique_lock g(m_aMutex);
             aIt->second.notifyEach(g, &css::frame::XStatusListener::statusChanged, aEventToSend);
+        }
+    }
+
+    // Notify LOKit clients about chart command state changes.
+    // The chart controller's dispatcher is not part of the SfxDispatcher chain,
+    // so state changes would otherwise not reach the LOKit callback layer.
+    if( !xSingleListener.is() && comphelper::LibreOfficeKit::isActive())
+    {
+        if( SfxViewShell* pViewShell = SfxViewShell::Current())
+        {
+            OString aPayload = rURL.toUtf8()
+                + (bEnabled ? std::string_view("=enabled") : std::string_view("=disabled"));
+            pViewShell->libreOfficeKitViewCallback(LOK_CALLBACK_STATE_CHANGED, aPayload);
         }
     }
 }
