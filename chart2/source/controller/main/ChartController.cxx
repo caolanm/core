@@ -382,9 +382,12 @@ void SAL_CALL ChartController::attachFrame(
         assert(pSidebar);
         pSidebar->registerSidebarForFrame(this);
         pSidebar->updateModel(getChartModel());
-        css::lang::EventObject aEvent;
-        mpSelectionChangeHandler->selectionChanged(aEvent);
     }
+
+    // Notify context change unconditionally so that LOKit clients
+    // (e.g. the notebookbar) learn about chart activation even when
+    // no sidebar is available.
+    mpSelectionChangeHandler->selectionChanged(css::lang::EventObject());
 
     //add as disposelistener to the frame (due to persistent reference) ??...:
 
