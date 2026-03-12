@@ -517,6 +517,7 @@ void ControllerCommandDispatch::initialize()
         m_apControllerState->update( m_xChartController, xModel );
 
     updateCommandAvailability();
+    fireStatusEvent(OUString(), nullptr);
 }
 
 void ControllerCommandDispatch::fireStatusEventForURLImpl(
