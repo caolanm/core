@@ -32,7 +32,6 @@
 #include <vcl/weld/weld.hxx>
 
 #include "ClipboardSelectionType.hxx"
-#include "displayconnectiondispatch.hxx"
 
 #include <com/sun/star/datatransfer/clipboard/XClipboard.hpp>
 #include <com/sun/star/datatransfer/dnd/XDragSource.hpp>
