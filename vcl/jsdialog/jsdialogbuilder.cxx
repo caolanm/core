@@ -1768,6 +1768,7 @@ void JSTreeView::set_sensitive(const weld::TreeIter& rIter, bool bSensitive, int
 void JSTreeView::do_select(int pos)
 {
     assert(m_xTreeView->IsUpdateMode() && "don't select when frozen");
+    int nOrigPos = pos;
     if (pos == -1 || (pos == 0 && n_children() == 0))
         m_xTreeView->SelectAll(false);
     else
@@ -1786,7 +1787,7 @@ void JSTreeView::do_select(int pos)
 
     std::unique_ptr<jsdialog::ActionDataMap> pMap = std::make_unique<jsdialog::ActionDataMap>();
     (*pMap)[ACTION_TYPE ""_ostr] = "select";
-    (*pMap)["position"_ostr] = OUString::number(pos);
+    (*pMap)["position"_ostr] = OUString::number(nOrigPos);
     sendAction(std::move(pMap));
 }
 
