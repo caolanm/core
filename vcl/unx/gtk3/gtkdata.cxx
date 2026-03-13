@@ -927,8 +927,7 @@ int getButtonPriority(std::u16string_view rType)
     const OUString &rEnv = Application::GetDesktopEnvironment();
 
     if (rEnv.equalsIgnoreAsciiCase("windows") ||
-        rEnv.equalsIgnoreAsciiCase("tde") ||
-        rEnv.startsWithIgnoreAsciiCase("kde"))
+        rEnv.startsWithIgnoreAsciiCase("plasma"))
     {
         pOrder = &aSaveDiscardCancel[0];
     }
