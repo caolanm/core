@@ -30,6 +30,7 @@
 #include "ContentNode.hxx"
 #include "EditPaM.hxx"
 
+#include <concepts>
 #include <cstddef>
 #include <memory>
 #include <vector>
@@ -192,6 +193,12 @@ public:
 
     OUString       GetParaAsString( sal_Int32 nNode ) const;
     static OUString  GetParaAsString(const ContentNode* pNode, sal_Int32 nStartPos = 0, sal_Int32 nEndPos = -1);
+    // avoid ambiguity when passing literal 0 as nNode, which could be interpreted as either a
+    // pointer or an integer (on Windows, sal_Int32 is not int)
+    template <std::signed_integral N> OUString GetParaAsString(N nNode) const
+    {
+        return GetParaAsString(static_cast<sal_Int32>(nNode));
+    }
 
     EditPaM GetStartPaM() const;
     EditPaM GetEndPaM() const;
