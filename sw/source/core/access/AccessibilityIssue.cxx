@@ -381,19 +381,23 @@ void AccessibilityIssue::quickFixIssue() const
         {
             SvxAbstractDialogFactory* pFact = SvxAbstractDialogFactory::Create();
             SwWrtShell* pWrtShell = pShell->GetWrtShell();
-            ScopedVclPtr<AbstractSvxNameDialog> aNameDialog(pFact->CreateSvxNameDialog(
+            VclPtr<AbstractSvxNameDialog> xNameDialog(pFact->CreateSvxNameDialog(
                 pWrtShell->GetView().GetFrameWeld(), OUString(),
                 SwResId(STR_DOCUMENT_TITLE_DLG_DESC), SwResId(STR_DOCUMENT_TITLE_DLG_TITLE)));
-            if (aNameDialog->Execute() == RET_OK)
-            {
-                const uno::Reference<document::XDocumentPropertiesSupplier> xDPS(
-                    pShell->GetModel(), uno::UNO_QUERY_THROW);
-                const uno::Reference<document::XDocumentProperties> xDocumentProperties(
-                    xDPS->getDocumentProperties());
-                xDocumentProperties->setTitle(aNameDialog->GetName());
+            xNameDialog->StartExecuteAsync(
+                [ xNameDialog, pShell, pDoc = m_pDoc ](sal_Int32 nResult) {
+                    if (nResult == RET_OK)
+                    {
+                        const uno::Reference<document::XDocumentPropertiesSupplier> xDPS(
+                            pShell->GetModel(), uno::UNO_QUERY_THROW);
+                        const uno::Reference<document::XDocumentProperties> xDocumentProperties(
+                            xDPS->getDocumentProperties());
+                        xDocumentProperties->setTitle(xNameDialog->GetName());
 
-                m_pDoc->getOnlineAccessibilityCheck()->resetAndQueueDocumentLevel();
-            }
+                        pDoc->getOnlineAccessibilityCheck()->resetAndQueueDocumentLevel();
+                    }
+                    xNameDialog->disposeOnce();
+                });
         }
         break;
         case IssueObject::DOCUMENT_BACKGROUND:
