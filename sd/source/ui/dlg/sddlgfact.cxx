@@ -82,7 +82,7 @@ namespace
 {
 /// Provides managing and getting information from the numbering and position dialog.
 class AbstractSvxBulletAndPositionDlg_Impl
-    : public vcl::AbstractDialogImpl_Sync<AbstractSvxBulletAndPositionDlg, SvxBulletAndPositionDlg>
+    : public vcl::AbstractDialogImpl_Async<AbstractSvxBulletAndPositionDlg, SvxBulletAndPositionDlg>
 {
 public:
     using AbstractDialogImpl_BASE::AbstractDialogImpl_BASE;

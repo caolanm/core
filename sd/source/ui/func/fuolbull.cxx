@@ -82,31 +82,32 @@ void FuBulletAndPosition::DoExecute( SfxRequest& rReq )
     SfxItemSetFixed<EE_PARA_NUMBULLET, EE_PARA_BULLET> aNewAttr( mrViewShell.GetPool() );
     aNewAttr.Put( aEditAttr, false );
 
-    auto pView = mpView;
-
     // create and execute dialog
     SdAbstractDialogFactory* pFact = SdAbstractDialogFactory::Create();
-    ScopedVclPtr<AbstractSvxBulletAndPositionDlg> pDlg(pFact->CreateSvxBulletAndPositionDlg(mrViewShell.GetFrameWeld(), &aNewAttr, mpView));
-    sal_uInt16 nResult = pDlg->Execute();
+    VclPtr<AbstractSvxBulletAndPositionDlg> pDlg(pFact->CreateSvxBulletAndPositionDlg(mrViewShell.GetFrameWeld(), &aNewAttr, mpView));
 
-    if( nResult == RET_OK )
-    {
-        OutlinerView* pOLV = pView->GetTextEditOutlinerView();
-
-        std::unique_ptr<OutlineViewModelChangeGuard, o3tl::default_delete<OutlineViewModelChangeGuard>> aGuard;
-
-        if (OutlineView* pOutlineView = dynamic_cast<OutlineView*>(pView))
+    pDlg->StartExecuteAsync([pDlg, pView = this->mpView, pViewShell = &this->mrViewShell, aNewAttr = std::move(aNewAttr)](sal_Int32 nResult) mutable {
+        if( nResult == RET_OK )
         {
-            pOLV = pOutlineView->GetViewByWindow(mrViewShell.GetActiveWindow());
-            aGuard.reset(new OutlineViewModelChangeGuard(*pOutlineView));
+            OutlinerView* pOLV = pView->GetTextEditOutlinerView();
+
+            std::unique_ptr<OutlineViewModelChangeGuard, o3tl::default_delete<OutlineViewModelChangeGuard>> aGuard;
+
+            if (OutlineView* pOutlineView = dynamic_cast<OutlineView*>(pView))
+            {
+                pOLV = pOutlineView->GetViewByWindow(pViewShell->GetActiveWindow());
+                aGuard.reset(new OutlineViewModelChangeGuard(*pOutlineView));
+            }
+
+            if( pOLV )
+                pOLV->EnsureNumberingIsOn();
+
+            const SfxItemSet pOutputSet( *pDlg->GetOutputItemSet( &aNewAttr ) );
+            pView->SetAttributes(pOutputSet, /*bReplaceAll=*/false, /*bSlide*/ pDlg->IsSlideScope(), /*bMaster=*/pDlg->IsApplyToMaster());
         }
 
-        if( pOLV )
-            pOLV->EnsureNumberingIsOn();
-
-        const SfxItemSet pOutputSet( *pDlg->GetOutputItemSet( &aNewAttr ) );
-        pView->SetAttributes(pOutputSet, /*bReplaceAll=*/false, /*bSlide*/ pDlg->IsSlideScope(), /*bMaster=*/pDlg->IsApplyToMaster());
-    }
+        pDlg->disposeOnce();
+    });
 
     rReq.Done();
 }
