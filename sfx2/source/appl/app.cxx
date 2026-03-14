@@ -64,9 +64,7 @@ SfxLinkItem::~SfxLinkItem() = default;
 
 static SfxApplication* g_pSfxApplication = nullptr;
 
-#if HAVE_FEATURE_XMLHELP
 static SfxHelp*        pSfxHelp = nullptr;
-#endif
 
 SfxApplication* SfxApplication::Get()
 {
@@ -109,9 +107,7 @@ SfxApplication* SfxApplication::GetOrCreate()
         ::framework::SetStatusBarControllerCreator( SfxStatusBarControllerFactory );
         ::framework::SetDockingWindowCreator( SfxDockingWindowFactory );
         ::framework::SetIsDockingWindowVisible( IsDockingWindowVisible );
-#if HAVE_FEATURE_XMLHELP
         Application::SetHelp( pSfxHelp );
-#endif
 #if HAVE_FEATURE_XMLHELP || defined(EMSCRIPTEN)
         bool bHelpTip = officecfg::Office::Common::Help::Tip::get();
         bool bExtendedHelpTip = officecfg::Office::Common::Help::ExtendedTip::get();
@@ -151,9 +147,7 @@ SfxApplication::SfxApplication()
     (void)bOk;
 #endif
 
-#if HAVE_FEATURE_XMLHELP
     pSfxHelp = new SfxHelp;
-#endif
 
 #if HAVE_FEATURE_SCRIPTING
     StarBASIC::SetGlobalErrorHdl( LINK( this, SfxApplication, GlobalBasicErrorHdl_Impl ) );
@@ -171,10 +165,8 @@ SfxApplication::~SfxApplication()
     for (auto &module : pImpl->aModules)    // Clear modules
         module.reset();
 
-#if HAVE_FEATURE_XMLHELP
     delete pSfxHelp;
     Application::SetHelp();
-#endif
 
     if ( !pImpl->bDowning )
         Deinitialize();
