@@ -317,40 +317,39 @@ SalInstance *CreateSalInstance()
 #endif
 
     // fallback, try everything
-    static const char* const pPlugin[] = {
+    static constexpr OUString aPlugins[] = {
 #ifdef _WIN32
-        "win",
+        u"win"_ustr,
 #elif defined(MACOSX)
-        "osx",
+        u"osx"_ustr,
 #else // !_WIN32 && !MACOSX
 #if ENABLE_GTK3
-        "gtk3",
+        u"gtk3"_ustr,
 #endif
 #if ENABLE_KF5
-        "kf5",
+        u"kf5"_ustr,
 #endif
 #if ENABLE_GTK3_KDE5
-        "gtk3_kde5",
+        u"gtk3_kde5"_ustr,
 #endif
 #if ENABLE_GEN
-        "gen",
+        u"gen"_ustr,
 #endif
 #if ENABLE_QT5
-        "qt5",
+        u"qt5"_ustr,
 #endif
 #if ENABLE_KF6
-        "kf6",
+        u"kf6"_ustr,
 #endif
 #if ENABLE_QT6
-        "qt6",
+        u"qt6"_ustr,
 #endif
 #endif // !_WIN32 && !MACOSX
-        nullptr
     };
 
-    for (int i = 0; pPlugin[i]; ++i)
+    for (const OUString& rPlugin : aPlugins)
     {
-        if (SalInstance* pInst = tryInstance(OUString::createFromAscii(pPlugin[i])))
+        if (SalInstance* pInst = tryInstance(rPlugin))
             return pInst;
     }
 
