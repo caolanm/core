@@ -31,8 +31,6 @@ interface XMSAAService : ::com::sun::star::lang::XComponent
         @see AccessibleContext
     */
     hyper getAccObjectPtr([in] hyper hWnd, [in] hyper lParam, [in] hyper wParam);
-
-    void handleWindowOpened([in] hyper i);
 };
 
 }; }; }; };

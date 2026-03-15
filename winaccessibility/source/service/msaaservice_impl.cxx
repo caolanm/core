@@ -68,7 +68,8 @@ public:
     // XMSAAService
     virtual sal_Int64 SAL_CALL getAccObjectPtr(
             sal_Int64 hWnd, sal_Int64 lParam, sal_Int64 wParam) override;
-    virtual void SAL_CALL handleWindowOpened(sal_Int64) override;
+
+    void handleWindowOpened(vcl::Window* pWindow);
 
     // XServiceInfo
     virtual OUString SAL_CALL getImplementationName() override;
@@ -95,24 +96,15 @@ sal_Int64 MSAAServiceImpl::getAccObjectPtr(
     return m_pTopWindowListener->GetMSComPtr(hWnd, lParam, wParam);
 }
 
-/**
-   * Implementation of handleWindowOpened, the method will be invoked when a
-   * top window is opened and AT starts up.
-   * @param
-   * @return
-   */
-void MSAAServiceImpl::handleWindowOpened(sal_Int64 nAcc)
+/** The method will be invoked when a top window is opened and AT starts up. */
+void MSAAServiceImpl::handleWindowOpened(vcl::Window* pWindow)
 {
     SolarMutexGuard g;
 
-    SAL_INFO( "iacc2", "Window opened " << nAcc );
+    SAL_INFO("iacc2", "Window opened " << pWindow);
 
-    if (m_pTopWindowListener.is() && nAcc)
-    {
-        m_pTopWindowListener->HandleWindowOpened(
-            static_cast<vcl::Window*>(
-                reinterpret_cast<void*>(nAcc)));
-    }
+    if (m_pTopWindowListener.is() && pWindow)
+        m_pTopWindowListener->HandleWindowOpened(pWindow);
 }
 
 OUString MSAAServiceImpl::getImplementationName()
@@ -151,7 +143,7 @@ static void AccessBridgeUpdateOldTopWindows(const rtl::Reference<MSAAServiceImpl
         vcl::Window* pTopWindow = Application::GetTopWindow( i );
         rtl::Reference<comphelper::OAccessible> pAccessible = pTopWindow->GetAccessible();
         if (pAccessible.is() && !pAccessible->getAccessibleName().isEmpty())
-            rpAccMgr->handleWindowOpened(reinterpret_cast<sal_Int64>(pTopWindow));
+            rpAccMgr->handleWindowOpened(pTopWindow);
     }
 }
 
