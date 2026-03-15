@@ -143,7 +143,7 @@ Sequence< OUString > MSAAServiceImpl::getSupportedServiceNames()
 /*
  * Setup and notify the OS of Accessible peers for all existing windows.
  */
-static void AccessBridgeUpdateOldTopWindows( const Reference< XMSAAService > &xAccMgr )
+static void AccessBridgeUpdateOldTopWindows(const rtl::Reference<MSAAServiceImpl>& rpAccMgr)
 {
     tools::Long nTopWindowCount = Application::GetTopWindowCount();
     for (tools::Long i = 0; i < nTopWindowCount; i++)
@@ -151,7 +151,7 @@ static void AccessBridgeUpdateOldTopWindows( const Reference< XMSAAService > &xA
         vcl::Window* pTopWindow = Application::GetTopWindow( i );
         rtl::Reference<comphelper::OAccessible> pAccessible = pTopWindow->GetAccessible();
         if (pAccessible.is() && !pAccessible->getAccessibleName().isEmpty())
-            xAccMgr->handleWindowOpened(reinterpret_cast<sal_Int64>(pTopWindow));
+            rpAccMgr->handleWindowOpened(reinterpret_cast<sal_Int64>(pTopWindow));
     }
 }
 
@@ -187,14 +187,14 @@ extern "C" SAL_DLLPUBLIC_EXPORT css::uno::XInterface*
 winaccessibility_MSAAServiceImpl_get_implementation(
     css::uno::XComponentContext* , css::uno::Sequence<css::uno::Any> const&)
 {
-    Reference< XMSAAService > xAccMgr( new MSAAServiceImpl() );
+    rtl::Reference<MSAAServiceImpl> pAccMgr(new MSAAServiceImpl());
 
-    AccessBridgeUpdateOldTopWindows( xAccMgr );
+    AccessBridgeUpdateOldTopWindows(pAccMgr);
 
     SAL_INFO("iacc2", "Created new IAccessible2 service impl.");
 
-    xAccMgr->acquire();
-    return xAccMgr.get();
+    pAccMgr->acquire();
+    return uno::Reference<XMSAAService>(pAccMgr).get();
 }
 
 }
