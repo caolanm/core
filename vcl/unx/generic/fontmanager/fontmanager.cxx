@@ -385,9 +385,6 @@ void PrintFontManager::initialize()
     CALLGRIND_ZERO_STATS();
     #endif
 
-    // initialize can be called more than once, e.g.
-    // gtk-fontconfig-timestamp changes to reflect new font installed and
-    // PrintFontManager::initialize called again
     {
         m_nNextFontID = 1;
         m_aFonts.clear();
