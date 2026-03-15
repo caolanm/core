@@ -99,10 +99,6 @@ PrintFontManager::PrintFontManager()
     CALLGRIND_ZERO_STATS();
 #endif
 
-    {
-        m_nNextFontID = 1;
-        m_aFonts.clear();
-    }
 #if OSL_DEBUG_LEVEL > 1
     clock_t aStart;
     clock_t aStep1;
