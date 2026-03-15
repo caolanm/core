@@ -49,7 +49,7 @@ ScPivotCalcFieldDlg::ScPivotCalcFieldDlg(weld::Window* pParent, ScViewData& rDat
     , mrDocument(mrViewData.GetDocument())
     , maPivotTableObject(*pDPObj)
     , mxCalcNames(m_xBuilder->weld_combo_box(u"calcfieldscb"_ustr))
-    , mxCalculation(m_xBuilder->weld_entry(u"calcentry"_ustr))
+    , mxCalculation(m_xBuilder->weld_text_view(u"calcentry"_ustr))
     , mxBtnAdd(m_xBuilder->weld_button(u"addbtn"_ustr))
     , mxBtnMod(m_xBuilder->weld_button(u"modbtn"_ustr))
     , mxBtnDel(m_xBuilder->weld_button(u"deletebtn"_ustr))
@@ -79,6 +79,7 @@ void ScPivotCalcFieldDlg::Init()
     mxFieldList->connect_selection_changed(LINK(this, ScPivotCalcFieldDlg, FieldListSelected));
     mxCalcNames->connect_changed(LINK(this, ScPivotCalcFieldDlg, CalcFieldNameSelected));
     mxCalculation->connect_changed(LINK(this, ScPivotCalcFieldDlg, CalcEntryChanged));
+    mxCalculation->set_size_request(-1, mxCalculation->get_height_rows(3));
 
     // Initialize Data
     maPivotTableObject.FillOldParam(maPivotParameters);
@@ -204,7 +205,8 @@ void ScPivotCalcFieldDlg::InsertSelectedField()
     else
         mxCalculation->set_text(mxCalculation->get_text() + u" "_ustr + aFieldName);
     mxCalculation->grab_focus();
-    mxCalculation->set_position(-1);
+    // later when set_position already available: mxCalculation->set_position(-1);
+    mxCalculation->select_region(-1, -1);
 }
 
 void ScPivotCalcFieldDlg::RemoveDeletedFieldsFromCache()
@@ -384,7 +386,8 @@ bool ScPivotCalcFieldDlg::DoAddMod()
 {
     // Validate the formula before adding or modifying
     FormulaError eError = FormulaError::NONE;
-    OUString aCalculation = mxCalculation->get_text();
+    OUString aCalculation
+        = mxCalculation->get_text().replaceAll(u"\r", u"").replaceAll(u"\n", u" ");
     std::shared_ptr<ScTokenArray> pTokenArray = ValidateFormula(aCalculation, &eError);
     if (!pTokenArray)
     {
@@ -583,11 +586,13 @@ IMPL_LINK_NOARG(ScPivotCalcFieldDlg, CalcFieldNameSelected, weld::ComboBox&, voi
     }
 }
 
-IMPL_LINK_NOARG(ScPivotCalcFieldDlg, CalcEntryChanged, weld::Entry&, void)
+IMPL_LINK_NOARG(ScPivotCalcFieldDlg, CalcEntryChanged, weld::TextView&, void)
 {
     OUString aName = mxCalcNames->get_active_text();
-    if (!aName.isEmpty() && !IsExistingField(aName))
-        mxBtnAdd->set_sensitive(true);
+    OUString aCalc = mxCalculation->get_text().trim();
+    bool bEnable = !aCalc.isEmpty() && !aName.isEmpty() && !IsExistingField(aName);
+    if (mxBtnAdd->get_sensitive() != bEnable)
+        mxBtnAdd->set_sensitive(bEnable);
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
