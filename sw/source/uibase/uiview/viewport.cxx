@@ -1189,10 +1189,10 @@ bool SwView::UpdateScrollbars()
             if ( bVScrollVisible != m_pVScrollbar->IsScrollbarVisible(true) )
                 bRet = true;
         }
-        if (m_pHScrollbar && m_pWrtShell)
+        if (m_pHScrollbar)
         {
             const bool bHScrollVisible = m_pHScrollbar->IsScrollbarVisible(true);
-            if( m_pWrtShell->GetViewOptions()->GetZoomType() == SvxZoomType::PAGEWIDTH)
+            if(m_pWrtShell && m_pWrtShell->GetViewOptions()->GetZoomType() == SvxZoomType::PAGEWIDTH)
             {
                 ShowHScrollbar(false);
                 if (bHScrollVisible)
