@@ -18,7 +18,7 @@
  */
 
 #include <string.h>
-#include <svsys.h>
+#include <win/svsys.h>
 #include <rtl/strbuf.hxx>
 #include <tools/poly.hxx>
 #include <basegfx/polygon/b2dpolygon.hxx>

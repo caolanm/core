@@ -19,7 +19,7 @@
 
 #include <string.h>
 
-#include <svsys.h>
+#include <win/svsys.h>
 
 #include <vcl/svapp.hxx>
 #include <sal/log.hxx>

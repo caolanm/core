@@ -24,7 +24,7 @@
 #include <rtl/ustring.hxx>
 
 #include <sallayout.hxx>
-#include <svsys.h>
+#include <win/svsys.h>
 #include <win/salgdi.h>
 #include <o3tl/sorted_vector.hxx>
 

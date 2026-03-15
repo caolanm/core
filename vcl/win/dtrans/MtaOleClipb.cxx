@@ -35,7 +35,7 @@
 
 #include "MtaOleClipb.hxx"
 
-#include <svsys.h>
+#include <win/svsys.h>
 #include <win/saldata.hxx>
 
 #include <osl/thread.h>

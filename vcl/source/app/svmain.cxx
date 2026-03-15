@@ -60,7 +60,7 @@
 #include <svdata.hxx>
 
 #ifdef _WIN32
-#include <svsys.h>
+#include <win/svsys.h>
 #include <process.h>
 #include <ole2.h>
 #else

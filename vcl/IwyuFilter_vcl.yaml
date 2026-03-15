@@ -23,14 +23,6 @@ excludelist:
     vcl/inc/unx/saldisp.hxx:
     # Don't replace with generated header
     - epoxy/glx.h
-    vcl/inc/unx/svsys.h:
-    # Empty header, but keep intact for nice system abstraction
-    - X11/Xlib.h
-    - X11/Xutil.h
-    - X11/XKBlib.h
-    vcl/inc/svsys.h:
-    # Needed for nice system abstraction
-    - unx/svsys.h
     vcl/qa/cppunit/lifecycle.cxx:
     # Needed for template
     - com/sun/star/awt/XVclWindowPeer.hpp

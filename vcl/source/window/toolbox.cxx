@@ -46,7 +46,7 @@
 #include <toolbox.h>
 #include <spin.hxx>
 #if defined(_WIN32)
-#include <svsys.h>
+#include <win/svsys.h>
 #endif
 
 #include <cstdlib>

@@ -23,7 +23,7 @@
 #include <memory>
 #include <numeric>
 
-#include <svsys.h>
+#include <win/svsys.h>
 
 #include "gdiimpl.hxx"
 

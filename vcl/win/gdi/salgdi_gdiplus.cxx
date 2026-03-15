@@ -18,7 +18,7 @@
  */
 
 #include <string.h>
-#include <svsys.h>
+#include <win/svsys.h>
 #include <win/wincomp.hxx>
 #include <win/saldata.hxx>
 #include <win/salgdi.h>

@@ -31,7 +31,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include <svsys.h>
+#include <win/svsys.h>
 
 #include <comphelper/diagnose_ex.hxx>
 #include <comphelper/windowserrorstring.hxx>

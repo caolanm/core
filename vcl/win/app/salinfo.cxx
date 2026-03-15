@@ -17,12 +17,12 @@
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
  */
 
-#include <svsys.h>
 #include <o3tl/char16_t2wchar_t.hxx>
 
 #include <sal/log.hxx>
 #include <vcl/window.hxx>
 
+#include <win/svsys.h>
 #include <win/salsys.h>
 #include <win/salframe.h>
 #include <win/salinst.h>

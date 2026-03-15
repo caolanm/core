@@ -26,7 +26,7 @@
 #include <vcl/sysdata.hxx>
 #include <vcl/windowstate.hxx>
 #include <salframe.hxx>
-#include <svsys.h>
+#include <win/svsys.h>
 
 class WinSalGraphics;
 struct ITaskbarList3;

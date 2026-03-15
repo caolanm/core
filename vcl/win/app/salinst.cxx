@@ -18,7 +18,7 @@
  */
 
 #include <string.h>
-#include <svsys.h>
+#include <win/svsys.h>
 #include <process.h>
 
 #include <osl/conditn.hxx>

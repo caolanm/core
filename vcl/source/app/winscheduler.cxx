@@ -24,7 +24,7 @@
 #include <sal/log.hxx>
 #include <vcl/winscheduler.hxx>
 
-#include <svsys.h>
+#include <win/svsys.h>
 #include <win/saldata.hxx>
 #include <win/salinst.h>
 

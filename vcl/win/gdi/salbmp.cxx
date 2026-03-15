@@ -16,7 +16,7 @@
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
  */
 
-#include <svsys.h>
+#include <win/svsys.h>
 #include <vcl/bitmap.hxx>
 #include <vcl/BitmapAccessMode.hxx>
 #include <vcl/BitmapBuffer.hxx>

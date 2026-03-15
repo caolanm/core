@@ -25,7 +25,7 @@
 #include <vector>
 #include <string.h>
 
-#include <svsys.h>
+#include <win/svsys.h>
 
 #include <osl/module.h>
 #include <o3tl/char16_t2wchar_t.hxx>

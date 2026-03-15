@@ -21,7 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <svsys.h>
+#include <win/svsys.h>
 
 #include <win/wincomp.hxx>
 #include <win/salbmp.h>
