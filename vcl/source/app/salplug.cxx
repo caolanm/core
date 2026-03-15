@@ -298,17 +298,21 @@ SalInstance *CreateSalInstance()
     return create_SalInstance();
 
 #else // !STATIC_SAL_INSTANCE
-    SalInstance *pInst = nullptr;
 
     if( !aUsePlugin.isEmpty() )
-        pInst = tryInstance( aUsePlugin, true );
+    {
+        if (SalInstance* pInst = tryInstance(aUsePlugin, true))
+            return pInst;
+    }
 
 #if UNIX_DESKTOP_DETECT
-    const char* const* pPluginList = pInst ? nullptr : autodetect_plugin_list();
-    for (int i = 0; !pInst && pPluginList[i]; ++i)
+    const char* const* pPluginList = autodetect_plugin_list();
+    for (int i = 0; pPluginList[i]; ++i)
     {
-        pInst = tryInstance(OUString::createFromAscii(pPluginList[i]));
+        SalInstance* pInst = tryInstance(OUString::createFromAscii(pPluginList[i]));
         SAL_INFO_IF(pInst, "vcl.plugadapt", "plugin autodetection: " << pPluginList[i]);
+        if (pInst)
+            return pInst;
     }
 #endif
 
@@ -344,16 +348,14 @@ SalInstance *CreateSalInstance()
         nullptr
     };
 
-    for (int i = 0; !pInst && pPlugin[i]; ++i)
-        pInst = tryInstance( OUString::createFromAscii( pPlugin[ i ] ) );
-
-    if( ! pInst )
+    for (int i = 0; pPlugin[i]; ++i)
     {
-        std::fprintf( stderr, "no suitable windowing system found, exiting.\n" );
-        _exit( 1 );
+        if (SalInstance* pInst = tryInstance(OUString::createFromAscii(pPlugin[i])))
+            return pInst;
     }
 
-    return pInst;
+    std::fprintf(stderr, "no suitable windowing system found, exiting.\n");
+    _exit(1);
 #endif // !STATIC_SAL_INSTANCE
 }
 
