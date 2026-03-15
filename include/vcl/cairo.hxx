@@ -21,6 +21,10 @@
 
 #include <memory>
 
+// Cairo uses 24.8 fixed-point internally. Coordinates beyond this
+// (conservative) limit can trigger (ofz-detected) int overflows
+constexpr int nCairoCoordinateMax = 1 << 22;
+
 typedef struct _cairo_surface cairo_surface_t;
 typedef struct _cairo cairo_t;
 

@@ -34,6 +34,7 @@
 #include <vcl/graphictools.hxx>
 #include <comphelper/configuration.hxx>
 #include <unotools/fontdefs.hxx>
+#include <vcl/cairo.hxx>
 #include <vcl/TypeSerializer.hxx>
 
 namespace
@@ -81,8 +82,7 @@ bool AllowDim(tools::Long nDim)
     static bool bFuzzing = comphelper::IsFuzzing();
     if (bFuzzing)
     {
-        constexpr auto numCairoMax(1 << 22);
-        if (nDim > numCairoMax || nDim < -numCairoMax)
+        if (nDim > nCairoCoordinateMax || nDim < -nCairoCoordinateMax)
         {
             SAL_WARN("vcl", "skipping huge dimension: " << nDim);
             return false;

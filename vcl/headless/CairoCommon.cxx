@@ -953,8 +953,8 @@ void CairoCommon::drawPolyPolygon(const basegfx::B2DHomMatrix& rObjectToDevice,
     if (bFuzzing)
     {
         const basegfx::B2DRange aRange(rPolyPolygon.getB2DRange());
-        if (aRange.getMaxX() - aRange.getMinX() > 0x10000000
-            || aRange.getMaxY() - aRange.getMinY() > 0x10000000)
+        if (aRange.getMinX() < -nCairoCoordinateMax || aRange.getMinY() < -nCairoCoordinateMax
+            || aRange.getMaxX() > nCairoCoordinateMax || aRange.getMaxY() > nCairoCoordinateMax)
         {
             SAL_WARN("vcl.gdi", "drawPolyPolygon, skipping suspicious range of: "
                                     << aRange << " for fuzzing performance");
@@ -1061,8 +1061,8 @@ bool CairoCommon::drawPolyLine(const basegfx::B2DHomMatrix& rObjectToDevice,
     if (bFuzzing)
     {
         const basegfx::B2DRange aRange(rPolyLine.getB2DRange());
-        if (aRange.getMaxX() - aRange.getMinX() > 0x10000000
-            || aRange.getMaxY() - aRange.getMinY() > 0x10000000)
+        if (aRange.getMinX() < -nCairoCoordinateMax || aRange.getMinY() < -nCairoCoordinateMax
+            || aRange.getMaxX() > nCairoCoordinateMax || aRange.getMaxY() > nCairoCoordinateMax)
         {
             SAL_WARN("vcl.gdi", "drawPolyLine, skipping suspicious range of: "
                                     << aRange << " for fuzzing performance");
