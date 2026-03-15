@@ -139,8 +139,6 @@ public:
 
     void removeFontFile( std::u16string_view rFileUrl );
 
-    void initialize();
-
     const PrintFont* getFont( fontID nID ) const
     {
         auto it = m_aFonts.find( nID );

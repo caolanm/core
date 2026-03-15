@@ -93,6 +93,65 @@ PrintFontManager::PrintFontManager()
 {
     m_aFontInstallerTimer.SetInvokeHandler(LINK(this, PrintFontManager, autoInstallFontLangSupport));
     m_aFontInstallerTimer.SetTimeout(5000);
+
+#ifdef CALLGRIND_COMPILE
+    CALLGRIND_TOGGLE_COLLECT();
+    CALLGRIND_ZERO_STATS();
+#endif
+
+    {
+        m_nNextFontID = 1;
+        m_aFonts.clear();
+    }
+#if OSL_DEBUG_LEVEL > 1
+    clock_t aStart;
+    clock_t aStep1;
+    clock_t aStep2;
+
+    struct tms tms;
+
+    aStart = times(&tms);
+#endif
+
+    // first try fontconfig
+    initFontconfig();
+
+    // part one - look for downloadable fonts
+    rtl_TextEncoding aEncoding = osl_getThreadTextEncoding();
+    const OUString& rSalPrivatePath = psp::getFontPath();
+
+    // search for the fonts in SAL_PRIVATE_FONTPATH first; those are
+    // the fonts installed with the office
+    if (!rSalPrivatePath.isEmpty())
+    {
+        OString aPath = OUStringToOString(rSalPrivatePath, aEncoding);
+        sal_Int32 nIndex = 0;
+        do
+        {
+            OString aToken = aPath.getToken(0, ';', nIndex);
+            normPath(aToken);
+            if (!aToken.isEmpty())
+                addFontconfigDir(aToken);
+        } while (nIndex >= 0);
+    }
+
+    countFontconfigFonts();
+
+#if OSL_DEBUG_LEVEL > 1
+    aStep1 = times(&tms);
+
+    aStep2 = times(&tms);
+    SAL_INFO("vcl.fonts",
+             "PrintFontManager::PrintFontManager: collected " << m_aFonts.size() << " fonts.");
+    double fTick = (double)sysconf(_SC_CLK_TCK);
+    SAL_INFO("vcl.fonts", "Step 1 took " << ((double)(aStep1 - aStart) / fTick) << " seconds.");
+    SAL_INFO("vcl.fonts", "Step 2 took " << ((double)(aStep2 - aStep1) / fTick) << " seconds.");
+#endif
+
+#ifdef CALLGRIND_COMPILE
+    CALLGRIND_DUMP_STATS();
+    CALLGRIND_TOGGLE_COLLECT();
+#endif
 }
 
 PrintFontManager::~PrintFontManager()
@@ -376,73 +435,6 @@ bool PrintFontManager::analyzeSfntFile( PrintFont& rFont ) const
         SAL_WARN("vcl.fonts", "Could not OpenTTFont \"" << aFile << "\": " << int(e));
 
     return bSuccess;
-}
-
-void PrintFontManager::initialize()
-{
-    #ifdef CALLGRIND_COMPILE
-    CALLGRIND_TOGGLE_COLLECT();
-    CALLGRIND_ZERO_STATS();
-    #endif
-
-    {
-        m_nNextFontID = 1;
-        m_aFonts.clear();
-    }
-#if OSL_DEBUG_LEVEL > 1
-    clock_t aStart;
-    clock_t aStep1;
-    clock_t aStep2;
-
-    struct tms tms;
-
-    aStart = times( &tms );
-#endif
-
-    // first try fontconfig
-    initFontconfig();
-
-    // part one - look for downloadable fonts
-    rtl_TextEncoding aEncoding = osl_getThreadTextEncoding();
-    const OUString &rSalPrivatePath = psp::getFontPath();
-
-    // search for the fonts in SAL_PRIVATE_FONTPATH first; those are
-    // the fonts installed with the office
-    if( !rSalPrivatePath.isEmpty() )
-    {
-        OString aPath = OUStringToOString( rSalPrivatePath, aEncoding );
-        sal_Int32 nIndex = 0;
-        do
-        {
-            OString aToken = aPath.getToken( 0, ';', nIndex );
-            normPath( aToken );
-            if (!aToken.isEmpty())
-                addFontconfigDir(aToken);
-        } while( nIndex >= 0 );
-    }
-
-    countFontconfigFonts();
-
-#if OSL_DEBUG_LEVEL > 1
-    aStep1 = times( &tms );
-
-    aStep2 = times( &tms );
-    SAL_INFO("vcl.fonts", "PrintFontManager::initialize: collected "
-            << m_aFonts.size()
-            << " fonts.");
-    double fTick = (double)sysconf( _SC_CLK_TCK );
-    SAL_INFO("vcl.fonts", "Step 1 took "
-            << ((double)(aStep1 - aStart)/fTick)
-            << " seconds.");
-    SAL_INFO("vcl.fonts", "Step 2 took "
-            << ((double)(aStep2 - aStep1)/fTick)
-            << " seconds.");
-#endif
-
-    #ifdef CALLGRIND_COMPILE
-    CALLGRIND_DUMP_STATS();
-    CALLGRIND_TOGGLE_COLLECT();
-    #endif
 }
 
 void PrintFontManager::getFontList( ::std::vector< fontID >& rFontIDs )

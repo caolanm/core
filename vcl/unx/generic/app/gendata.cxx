@@ -62,7 +62,6 @@ psp::PrintFontManager* GenericUnixSalData::GetPrintFontManager()
     {
         GetFreetypeManager();
         m_pPrintFontManager.reset(new psp::PrintFontManager);
-        m_pPrintFontManager->initialize();
     }
     // PrintFontManager needs the FreetypeManager
     assert(m_pFreetypeManager);
