@@ -1073,7 +1073,7 @@ void SdrEditView::MergeMarkedObjects(SdrMergeMode eMode)
                 else
                     aGraphicSize = OutputDevice::LogicToLogic(aGraphicSize, pGraphicObject->GetPrefMapMode(), aMapMode100thmm);
 
-                if (aGraphicSize.IsEmpty())
+                if (aGraphicSize.IsEmpty() || aGrafRect.GetWidth() == 0 || aGrafRect.GetHeight() == 0)
                     continue;
 
                 double fScaleX = (aGraphicSize.Width()  - rExistingCrop.GetLeft() - rExistingCrop.GetRight())
