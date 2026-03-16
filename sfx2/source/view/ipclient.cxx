@@ -129,7 +129,9 @@ public:
 
 
     SfxInPlaceClient_Impl()
-    : m_pClient( nullptr )
+    : m_fScaleWidth(1.0)
+    , m_fScaleHeight(1.0)
+    , m_pClient( nullptr )
     , m_nAspect( 0 )
     , m_bStoreObject( true )
     , m_bUIActive( false )
@@ -643,7 +645,6 @@ SfxInPlaceClient::SfxInPlaceClient( SfxViewShell* pViewShell, vcl::Window *pDraw
 {
     m_xImp->m_pClient = this;
     m_xImp->m_nAspect = nAspect;
-    m_xImp->m_fScaleWidth = m_xImp->m_fScaleHeight = 1.0;
     pViewShell->NewIPClient_Impl(this);
     m_xImp->m_aTimer.SetTimeout( SFX_CLIENTACTIVATE_TIMEOUT );
     m_xImp->m_aTimer.SetInvokeHandler( LINK( m_xImp.get(), SfxInPlaceClient_Impl, TimerHdl ) );
