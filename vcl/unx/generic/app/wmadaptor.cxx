@@ -178,31 +178,27 @@ std::unique_ptr<WMAdaptor> WMAdaptor::createWMAdaptor(SalX11Display* pSalDisplay
 {
     // try a NetWM
     std::unique_ptr<WMAdaptor> pAdaptor(new NetWMAdaptor(pSalDisplay));
-    if( ! pAdaptor->isValid() )
+    if( pAdaptor->isValid() )
     {
-        pAdaptor.reset();
-    }
 #if OSL_DEBUG_LEVEL > 1
-    else
         SAL_INFO("vcl.app", "WM supports extended WM hints.");
 #endif
-
-    // try a GnomeWM
-    if( ! pAdaptor )
+    }
+    else
     {
+        // try a GnomeWM
         pAdaptor.reset(new GnomeWMAdaptor( pSalDisplay ));
-        if( ! pAdaptor->isValid() )
+        if( pAdaptor->isValid() )
         {
-            pAdaptor.reset();
-        }
 #if OSL_DEBUG_LEVEL > 1
-        else
             SAL_INFO("vcl.app", "WM supports GNOME WM hints.");
 #endif
+        }
+        else
+        {
+            pAdaptor.reset(new WMAdaptor( pSalDisplay ));
+        }
     }
-
-    if( ! pAdaptor )
-        pAdaptor.reset(new WMAdaptor( pSalDisplay ));
 
 #if OSL_DEBUG_LEVEL > 1
     SAL_INFO("vcl.app", "Window Manager's name is \""
