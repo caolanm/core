@@ -3825,6 +3825,7 @@ ScInterpreter::ScInterpreter( ScFormulaCell* pCell, ScDocument& rDoc, ScInterpre
     , pJumpMatrix(nullptr)
     , pMyFormulaCell(pCell)
     , pCur(nullptr)
+    , pStack{}
     , nGlobalError(FormulaError::NONE)
     , sp(0)
     , maxsp(0)
