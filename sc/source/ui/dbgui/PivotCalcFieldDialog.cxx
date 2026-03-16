@@ -429,7 +429,7 @@ bool ScPivotCalcFieldDlg::DoAddMod()
         pNewLabel->mnOriginalDim = -1;
         pNewLabel->mbCalculatedField = true;
         pNewLabel->maCalculation = aCalculation;
-        pNewLabel->mpCompiledFormula = pTokenArray;
+        pNewLabel->mpCompiledFormula = std::move(pTokenArray);
 
         // Insert before DataLayout
         maPivotParameters.maLabelArray.insert(maPivotParameters.maLabelArray.begin() + nInsertPos,
