@@ -17,8 +17,6 @@
  *   the License at http://www.apache.org/licenses/LICENSE-2.0 .
  */
 
-#include <X11/Xlib.h>
-
 #include <unx/desktops.hxx>
 
 #include <rtl/bootstrap.hxx>
@@ -29,86 +27,6 @@
 
 #include <string.h>
 #include <comphelper/string.hxx>
-
-static bool is_gnome_desktop( Display* pDisplay )
-{
-
-    // warning: these checks are coincidental, GNOME does not
-    // explicitly advertise itself
-    if ( getenv( "GNOME_DESKTOP_SESSION_ID" ) )
-        return true;
-
-    bool ret = false;
-
-    Atom nAtom1 = XInternAtom( pDisplay, "GNOME_SM_PROXY", True );
-    Atom nAtom2 = XInternAtom( pDisplay, "NAUTILUS_DESKTOP_WINDOW_ID", True );
-    if( nAtom1 || nAtom2 )
-    {
-        int nProperties = 0;
-        Atom* pProperties = XListProperties( pDisplay, DefaultRootWindow( pDisplay ), &nProperties );
-        if( pProperties && nProperties )
-        {
-            for( int i = 0; i < nProperties; i++ )
-                if( pProperties[ i ] == nAtom1 ||
-                    pProperties[ i ] == nAtom2 )
-                {
-                    ret = true;
-                    break;
-                }
-            XFree( pProperties );
-        }
-    }
-    if (ret)
-        return true;
-
-    Atom nUTFAtom       = XInternAtom( pDisplay, "UTF8_STRING", True );
-    Atom nNetWMNameAtom = XInternAtom( pDisplay, "_NET_WM_NAME", True );
-    if( nUTFAtom && nNetWMNameAtom )
-    {
-        // another, more expensive check: search for a gnome-panel
-        ::Window aRoot, aParent, *pChildren = nullptr;
-        unsigned int nChildren = 0;
-        XQueryTree( pDisplay, DefaultRootWindow( pDisplay ),
-                    &aRoot, &aParent, &pChildren, &nChildren );
-        if( pChildren && nChildren )
-        {
-            for( unsigned int i = 0; i < nChildren && ! ret; i++ )
-            {
-                Atom nType = None;
-                int nFormat = 0;
-                unsigned long nItems = 0, nBytes = 0;
-                unsigned char* pProp = nullptr;
-                XGetWindowProperty( pDisplay,
-                                    pChildren[i],
-                                    nNetWMNameAtom,
-                                    0, 8,
-                                    False,
-                                    nUTFAtom,
-                                    &nType,
-                                    &nFormat,
-                                    &nItems,
-                                    &nBytes,
-                                    &pProp );
-                if( pProp && nType == nUTFAtom )
-                {
-                    OString aWMName( reinterpret_cast<char*>(pProp) );
-                    if (
-                        (aWMName.equalsIgnoreAsciiCase("gnome-shell")) ||
-                        (aWMName.equalsIgnoreAsciiCase("gnome-panel"))
-                       )
-                    {
-                        ret = true;
-                    }
-                }
-                if( pProp )
-                    XFree( pProp );
-            }
-            XFree( pChildren );
-        }
-    }
-
-    return ret;
-}
 
 static bool is_plasma5_desktop()
 {
@@ -230,30 +148,12 @@ DesktopType get_desktop_environment()
     if( ! pDisplayStr || !*pDisplayStr )
         return DESKTOP_NONE;
 
+    // warning: these checks are coincidental, GNOME does not
+    // explicitly advertise itself
+    if (getenv("GNOME_DESKTOP_SESSION_ID"))
+        return DESKTOP_GNOME;
 
-    /* #i92121# workaround deadlocks in the X11 implementation
-    */
-    static const char* pNoXInitThreads = getenv( "SAL_NO_XINITTHREADS" );
-    /* #i90094#
-       from now on we know that an X connection will be
-       established, so protect X against itself
-    */
-    if( ! ( pNoXInitThreads && *pNoXInitThreads ) )
-        XInitThreads();
-
-    Display* pDisplay = XOpenDisplay( pDisplayStr );
-    if( pDisplay == nullptr )
-        return DESKTOP_NONE;
-
-    DesktopType ret;
-    if ( is_gnome_desktop( pDisplay ) )
-        ret = DESKTOP_GNOME;
-    else
-        ret = DESKTOP_UNKNOWN;
-
-    XCloseDisplay( pDisplay );
-
-    return ret;
+    return DESKTOP_UNKNOWN;
 }
 
 /* vim:set shiftwidth=4 softtabstop=4 expandtab: */
