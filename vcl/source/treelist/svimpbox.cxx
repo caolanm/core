@@ -672,7 +672,7 @@ void SvImpLBox::ShowCursor( bool bShow )
 void SvImpLBox::UpdateAll()
 {
     FindMostRight();
-    m_aVerSBar->SetRange( Range(0, m_pView->GetVisibleCount()-1 ) );
+    m_aVerSBar->SetRange( Range(0, static_cast<tools::Long>(m_pView->GetVisibleCount())-1 ) );
     SyncVerThumb();
     FillView();
     ShowVerSBar();
@@ -1430,7 +1430,7 @@ void SvImpLBox::EntryExpanded( SvTreeListEntry* pEntry )
         InvalidateEntriesFrom( nY );
         FindMostRight( pEntry );
     }
-    m_aVerSBar->SetRange( Range(0, m_pView->GetVisibleCount()-1 ) );
+    m_aVerSBar->SetRange( Range(0, static_cast<tools::Long>(m_pView->GetVisibleCount())-1 ) );
     // if we expanded before the thumb, the thumb's position has to be
     // corrected
     SyncVerThumb();
@@ -1453,7 +1453,7 @@ void SvImpLBox::EntryCollapsed( SvTreeListEntry* pEntry )
     if( m_pStartEntry )
     {
         tools::Long nOldThumbPos   = m_aVerSBar->GetThumbPos();
-        sal_uLong nVisList      = m_pView->GetVisibleCount();
+        tools::Long nVisList    = m_pView->GetVisibleCount();
         m_aVerSBar->SetRange( Range(0, nVisList-1) );
         tools::Long nNewThumbPos   = m_aVerSBar->GetThumbPos();
         if( nNewThumbPos != nOldThumbPos  )
@@ -1641,7 +1641,7 @@ void SvImpLBox::EntryRemoved()
     {
         if( m_nFlags & LBoxFlags::RemovedRecalcMostRight )
             FindMostRight();
-        m_aVerSBar->SetRange( Range(0, m_pView->GetVisibleCount()-1 ) );
+        m_aVerSBar->SetRange( Range(0, static_cast<tools::Long>(m_pView->GetVisibleCount())-1 ) );
         FillView();
         if( m_pStartEntry )
             // if something above the thumb was deleted
@@ -1710,7 +1710,7 @@ void SvImpLBox::EntryMoved( SvTreeListEntry* pEntry )
         // #i97346#
         m_pStartEntry = m_pView->First();
 
-    m_aVerSBar->SetRange( Range(0, m_pView->GetVisibleCount()-1));
+    m_aVerSBar->SetRange( Range(0, static_cast<tools::Long>(m_pView->GetVisibleCount())-1));
     sal_uInt16 nFirstPos = static_cast<sal_uInt16>(m_pTree->GetAbsPos( m_pStartEntry ));
     sal_uInt16 nNewPos = static_cast<sal_uInt16>(m_pTree->GetAbsPos( pEntry ));
     FindMostRight();
@@ -1782,7 +1782,7 @@ void SvImpLBox::EntryInserted( SvTreeListEntry* pEntry )
         m_pView->Invalidate();
 
     SetMostRight( pEntry );
-    m_aVerSBar->SetRange( Range(0, m_pView->GetVisibleCount()-1));
+    m_aVerSBar->SetRange( Range(0, static_cast<tools::Long>(m_pView->GetVisibleCount())-1));
     SyncVerThumb(); // if something was inserted before the thumb
     ShowVerSBar();
     ShowCursor( true );
