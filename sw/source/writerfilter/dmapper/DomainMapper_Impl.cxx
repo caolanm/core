@@ -3982,16 +3982,16 @@ void DomainMapper_Impl::fillEmptyFrameProperties(std::vector<beans::PropertyValu
     uno::Any aEmptyBorder{table::BorderLine2()};
     static const std::vector<PropertyIds> aBorderIds
         = { PROP_BOTTOM_BORDER, PROP_LEFT_BORDER, PROP_RIGHT_BORDER, PROP_TOP_BORDER };
-    for (size_t i = 0; i < aBorderIds.size(); ++i)
-        rFrameProperties.push_back(comphelper::makePropertyValue(getPropertyName(aBorderIds[i]), aEmptyBorder));
+    for (const auto& rBorderId : aBorderIds)
+        rFrameProperties.push_back(comphelper::makePropertyValue(getPropertyName(rBorderId), aEmptyBorder));
 
     static const std::vector<PropertyIds> aMarginIds
         = { PROP_BOTTOM_MARGIN, PROP_BOTTOM_BORDER_DISTANCE,
             PROP_LEFT_MARGIN,   PROP_LEFT_BORDER_DISTANCE,
             PROP_RIGHT_MARGIN,  PROP_RIGHT_BORDER_DISTANCE,
             PROP_TOP_MARGIN,    PROP_TOP_BORDER_DISTANCE };
-    for (size_t i = 0; i < aMarginIds.size(); ++i)
-        rFrameProperties.push_back(comphelper::makePropertyValue(getPropertyName(aMarginIds[i]), static_cast<sal_Int32>(0)));
+    for (const auto& rMarginId : aMarginIds)
+        rFrameProperties.push_back(comphelper::makePropertyValue(getPropertyName(rMarginId), static_cast<sal_Int32>(0)));
 }
 
 bool DomainMapper_Impl::IsInTOC() const
