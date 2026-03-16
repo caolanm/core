@@ -566,7 +566,12 @@ IMPL_LINK_NOARG(ScPivotCalcFieldDlg, CalcFieldNameSelected, weld::ComboBox&, voi
             mxBtnAdd->set_sensitive(true);
             mxBtnDel->set_sensitive(true);
 
-            SCCOL nCol = static_cast<SCCOL>(mxCalcNames->get_id(nIdx).toInt32());
+            sal_uInt32 nCol = mxCalcNames->get_id(nIdx).toUInt32();
+            if (nCol >= maPivotParameters.maLabelArray.size())
+            {
+                SAL_WARN("sc.ui", "CalcFieldNameSelected: invalid column index " << nCol);
+                return;
+            }
             ScDPLabelData& rLabelData = *maPivotParameters.maLabelArray[nCol];
             if (rLabelData.maCalculation)
             {
