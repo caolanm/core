@@ -313,8 +313,8 @@ void SwMarkdownParser::StartNumberedBulletList(MD_BLOCKTYPE aListType)
         AddParSpace();
 
     rInfo.IncDepth();
-    sal_uInt8 nLevel
-        = static_cast<sal_uInt8>((rInfo.GetDepth() <= MAXLEVEL ? rInfo.GetDepth() : MAXLEVEL) - 1);
+    sal_uInt16 nDepth = rInfo.GetDepth();
+    sal_uInt8 nLevel = static_cast<sal_uInt8>((nDepth <= MAXLEVEL ? nDepth : MAXLEVEL) - 1);
 
     if (!rInfo.GetNumRule())
     {
