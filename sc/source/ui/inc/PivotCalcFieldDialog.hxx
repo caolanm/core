@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <sal/types.h>
 #include <vcl/weld.hxx>
 
 #include "viewdata.hxx"
@@ -29,7 +30,7 @@
 
 class ScDocument;
 
-class ScPivotCalcFieldDlg : public weld::GenericDialogController
+class SAL_DLLPUBLIC_RTTI ScPivotCalcFieldDlg : public weld::GenericDialogController
 {
 public:
     SC_DLLPUBLIC ScPivotCalcFieldDlg(weld::Window* pParent, ScViewData& rData,
