@@ -1643,6 +1643,7 @@ sal_uInt16 SdDrawDocument::GetOrInsertCanvasPage()
         return 0xffff;
 
     // move the canvas page to the top
+    assert(nCanvasPageIndex <= SAL_MAX_UINT16 / 2);
     sal_uInt16 nCanvasPageNum = 2 * nCanvasPageIndex + 1;
     MovePage(nCanvasPageNum, 1); // Canvas page
     MovePage(nCanvasPageNum + 1, 2); // Canvas notes page
@@ -1792,7 +1793,9 @@ void SdDrawDocument::connectPagePreviews()
         {
             SdrPageObj* pPageObj = static_cast<SdrPageObj*>(pObj);
             SdPage* pPage = static_cast<SdPage*>(pPageObj->GetReferencedPage());
-            sal_uInt16 nIndex = (pPage->GetPageNum() - 1) / 2 - 1; // without canvas page
+            sal_uInt16 nPageNum = pPage->GetPageNum();
+            assert(nPageNum >= 3 && nPageNum % 2 == 1);
+            sal_uInt16 nIndex = (nPageNum - 1) / 2 - 1; // without canvas page
             aPageOrder[nIndex] = pPageObj;
         }
     }
