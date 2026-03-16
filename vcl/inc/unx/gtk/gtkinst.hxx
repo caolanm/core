@@ -25,7 +25,6 @@
 
 #include <DropTarget.hxx>
 #include <unx/X11Helper.hxx>
-#include <unx/salinst.h>
 #include <headless/svpinst.hxx>
 #include <com/sun/star/datatransfer/DataFlavor.hpp>
 #include <com/sun/star/datatransfer/dnd/XDragSource.hpp>
